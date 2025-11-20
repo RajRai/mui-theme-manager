@@ -9,15 +9,14 @@ const isDev = target === "dev" || process.env.NODE_ENV === "development";
 
 export default defineConfig({
   plugins: [react()],
-
-  // Use demo folder as root in both demo + dev
   root: isDemo ? "src/demo" : ".",
-  base: './',
+  // relative paths for GitHub Pages & local file previews
+  base: "./",
 
   build: isDemo
       ? {
-        // 🎯 GitHub Pages demo build
-        outDir: "../../dist-demo", // relative to "src/demo"
+        // 🎯 GitHub Pages demo build (from src/demo root)
+        outDir: "../../dist-demo",
         emptyOutDir: true,
         sourcemap: true,
       }
@@ -27,13 +26,14 @@ export default defineConfig({
           entry: resolve(__dirname, "src/lib/index.ts"),
           name: "MuiThemeManager",
           formats: ["es", "cjs"],
-          fileName: (format) =>
-              format === "es" ? "index.esm.js" : "index.cjs.js",
+          fileName: (format) => (format === "es" ? "index.esm.js" : "index.cjs.js"),
         },
         rollupOptions: {
-          external: [
-            ...Object.keys(pkg.peerDependencies || {}),
-          ],
+          // 🔒 Externalize all peer deps *and* their subpaths
+          external: (id: string) =>
+              /^(react|react-dom|@mui\/material|@mui\/icons-material|@emotion\/react|@emotion\/styled)(\/.*)?$/.test(
+                  id
+              ),
           output: {
             globals: {
               react: "React",
@@ -49,20 +49,20 @@ export default defineConfig({
         emptyOutDir: true,
       },
 
-  // 🧩 Conditional aliasing
   resolve: {
     alias: [
-      // 👇 This forces Vite to treat "../lib" as an alias
-      {
-        find: "../lib",
-        replacement: isDemo
-            ? resolve(__dirname, "dist/index.esm.js")
-            : resolve(__dirname, "src/lib/index.ts"),
-      },
-      {
-        find: "@",
-        replacement: resolve(__dirname, "src"),
-      },
+      { find: "@", replacement: resolve(__dirname, "src") },
+      // 🧭 During demo *dev*, force the package name to source to keep exactly one React
+      ...(isDemo && isDev
+          ? [{ find: (pkg as any).name, replacement: resolve(__dirname, "src/lib/index.ts") }]
+          : []),
     ],
+    dedupe: ["react", "react-dom"],
+  },
+
+  // ✅ Let Vite prebundle React so jsx-runtime has named exports
+  // (Do NOT exclude react/react-dom here)
+  optimizeDeps: {
+    include: ["react/jsx-runtime"], // extra-safe
   },
 });
