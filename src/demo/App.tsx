@@ -20,12 +20,12 @@ import {
     ThemeSelector,
     ThemeEditorModal,
     NewThemeButton,
-    defaultPresets,
+    allPresets,
 } from "../lib";
 
 const DemoApp: React.FC = () => {
     return (
-        <ThemeManagerProvider presets={defaultPresets}>
+        <ThemeManagerProvider presets={allPresets}>
             <ThemeEditorModal />
             <Container maxWidth="lg" sx={{ py: 5 }}>
                 <Paper

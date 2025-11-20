@@ -3,7 +3,7 @@ import { createTheme, Theme, ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import { EditorState, ThemeManagerContext } from "./ThemeManagerContext";
 import { PersistenceAdapter, ThemeDefinition } from "./types";
-import { defaultPresets } from "./presets";
+import {allPresets} from "./presets";
 
 const LOCAL_STORAGE_THEMES_KEY = "mui-theme-manager-custom-themes";
 const LOCAL_STORAGE_ACTIVE_KEY = "mui-theme-manager-active-theme-id";
@@ -118,7 +118,7 @@ export const ThemeManagerProvider: React.FC<ThemeManagerProviderProps> = ({
   };
 
   const presets = React.useMemo<ThemeDefinition[]>(
-      () => (presetsProp && presetsProp.length > 0 ? presetsProp : defaultPresets),
+      () => (presetsProp && presetsProp.length > 0 ? presetsProp : allPresets),
       [presetsProp]
   );
 
