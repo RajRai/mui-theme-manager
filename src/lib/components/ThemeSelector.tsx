@@ -7,13 +7,13 @@ import {
     FormControl,
     Typography,
     Tooltip,
-    InputLabel,
+    InputLabel, SelectProps,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useThemeManager } from "../ThemeManagerContext";
 
-export const ThemeSelector: React.FC<{ id?: string }> = ({ id = '' }) => {
+export const ThemeSelector: React.FC<{ id?: string, selectProps?: SelectProps }> = ({ id = '', selectProps }) => {
     const {
         presets,
         customThemes,
@@ -37,7 +37,7 @@ export const ThemeSelector: React.FC<{ id?: string }> = ({ id = '' }) => {
                 <Select
                     value={activeThemeId}
                     onChange={(e) => {
-                        setActiveTheme(e.target.value)
+                        setActiveTheme(e.target.value as string)
                         setPreviewTheme(undefined)
                     }}
                     onOpen={() => setMenuOpen(true)}
@@ -46,6 +46,7 @@ export const ThemeSelector: React.FC<{ id?: string }> = ({ id = '' }) => {
                         const theme = allThemes.find((t) => t.id === value);
                         return <Typography>{theme?.name ?? "Unknown theme"}</Typography>;
                     }}
+                    {...selectProps}
                 >
                     {allThemes.map((theme) => (
                         <MenuItem key={theme.id} value={theme.id}>
