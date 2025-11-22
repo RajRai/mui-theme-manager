@@ -20,13 +20,27 @@ import {
     ThemeSelector,
     ThemeEditorModal,
     NewThemeButton,
+    ThemeEditor,
+    useThemeManager,
     allPresets,
 } from "../lib";
+
+const InlineThemeEditor: React.FC = () => {
+    const { activeTheme } = useThemeManager();
+    return (
+        <ThemeEditor
+            value={activeTheme}
+        />
+    );
+};
+
 
 const DemoApp: React.FC = () => {
     return (
         <ThemeManagerProvider presets={allPresets}>
+            {/* Global modal-based editor example */}
             <ThemeEditorModal />
+
             <Container maxWidth="lg" sx={{ py: 5 }}>
                 <Paper
                     sx={{
@@ -66,6 +80,7 @@ const DemoApp: React.FC = () => {
 
                     <Divider sx={{ my: 3 }} />
 
+                    {/* --- Top: Theme controls + live preview (modal-based flow) --- */}
                     <Stack
                         direction={{ xs: "column", md: "row" }}
                         spacing={4}
@@ -165,6 +180,23 @@ const DemoApp: React.FC = () => {
                             </Stack>
                         </Box>
                     </Stack>
+
+                    {/* --- Bottom: inline editor example (no modal) --- */}
+                    <Divider sx={{ my: 4 }} />
+
+                    <Box>
+                        <Typography variant="subtitle1" gutterBottom>
+                            Inline Editor Example (without modal)
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Below is the same editor used by the modal, but rendered directly on the
+                            page. This is the pattern to use if you want to embed{" "}
+                            <code>ThemeEditorContents</code> in a settings screen, drawer, or custom
+                            layout instead of using the built-in <code>ThemeEditorModal</code>.
+                        </Typography>
+
+                        <InlineThemeEditor />
+                    </Box>
                 </Paper>
             </Container>
         </ThemeManagerProvider>

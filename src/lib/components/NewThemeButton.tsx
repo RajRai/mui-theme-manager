@@ -1,17 +1,31 @@
-import React from "react";
-import { Button } from "@mui/material";
+// NewThemeButton.tsx
+import React, { useMemo } from "react";
+import { Button, ButtonProps } from "@mui/material";
 import { useThemeManager } from "../ThemeManagerContext";
+import { ThemeDefinition } from "../types";
+import {ThemeEditorModal} from "./ThemeEditorModal";
 
-export const NewThemeButton: React.FC = () => {
-  const { openEditor } = useThemeManager();
+function deepClone<T>(o: T): T { return JSON.parse(JSON.stringify(o)); }
 
-  return (
-      <Button
-          variant="outlined"
-          size="small"
-          onClick={() => openEditor()}
-      >
-          + New Theme
-      </Button>
-  );
+export const NewThemeButton: React.FC<{
+    id?: string;
+    buttonProps?: ButtonProps;
+}> = ({ id = '', buttonProps }) => {
+    const { onEditTheme, activeTheme } = useThemeManager();
+
+    return (
+        <Button
+            variant="outlined"
+            size="small"
+            onClick={(e) => {onEditTheme({
+                id: `custom-${Date.now()}`,
+                name: "",
+                isPreset: false,
+                themeOptions: deepClone(activeTheme.themeOptions),
+            }, id)}}
+            {...buttonProps}
+        >
+            + New Theme
+        </Button>
+    );
 };

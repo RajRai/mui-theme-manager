@@ -13,14 +13,16 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useThemeManager } from "../ThemeManagerContext";
 
-export const ThemeSelector: React.FC = () => {
+export const ThemeSelector: React.FC<{ id?: string }> = ({ id = '' }) => {
     const {
         presets,
         customThemes,
         activeThemeId,
+        activeTheme,
         setActiveTheme,
         deleteCustomTheme,
-        openEditor,
+        onEditTheme,
+        setPreviewTheme
     } = useThemeManager();
 
     const allThemes = [...presets, ...customThemes];
@@ -34,7 +36,10 @@ export const ThemeSelector: React.FC = () => {
 
                 <Select
                     value={activeThemeId}
-                    onChange={(e) => setActiveTheme(e.target.value)}
+                    onChange={(e) => {
+                        setActiveTheme(e.target.value)
+                        setPreviewTheme(undefined)
+                    }}
                     onOpen={() => setMenuOpen(true)}
                     onClose={() => setMenuOpen(false)}
                     renderValue={(value) => {
@@ -61,7 +66,7 @@ export const ThemeSelector: React.FC = () => {
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     e.preventDefault();
-                                                    openEditor(theme);
+                                                    onEditTheme(theme, id);
                                                 }}
                                             >
                                                 <EditIcon fontSize="small" />

@@ -1,14 +1,11 @@
 import React from "react";
-import {
-    Typography,
-    Box,
-    Stack,
-} from "@mui/material";
+import { Typography, Box, Stack } from "@mui/material";
 import { ThemeDefinition } from "../types";
 
 export interface ColorPickerGridProps {
     draft: ThemeDefinition;
     onChange: (draft: ThemeDefinition) => void;
+    disabled?: boolean;
 }
 
 export function getColorFromDraft(
@@ -51,7 +48,7 @@ export function setColorOnDraft(
     return nextDraft;
 }
 
-const COLOR_FIELDS: { label: string; path: string; fallback: string }[] = [
+const COLOR_FIELDS = [
     { label: "Primary Color", path: "palette.primary.main", fallback: "#1976d2" },
     { label: "Secondary Color", path: "palette.secondary.main", fallback: "#9c27b0" },
 ];
@@ -59,7 +56,8 @@ const COLOR_FIELDS: { label: string; path: string; fallback: string }[] = [
 export const ColorSwatch: React.FC<{
     value: string;
     onChange: (v: string) => void;
-}> = ({ value, onChange }) => (
+    disabled?: boolean;
+}> = ({ value, onChange, disabled }) => (
     <Box
         sx={{
             width: 48,
@@ -71,20 +69,22 @@ export const ColorSwatch: React.FC<{
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            cursor: "pointer",
+            cursor: disabled ? "default" : "pointer",
+            opacity: disabled ? 0.5 : 1,
         }}
     >
         <Box
             component="input"
             type="color"
+            disabled={disabled}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => !disabled && onChange(e.target.value)}
             sx={{
                 width: "150%",
                 height: "150%",
                 border: "none",
                 padding: 0,
-                cursor: "pointer",
+                cursor: disabled ? "default" : "pointer",
                 background: "transparent",
             }}
         />
@@ -94,29 +94,15 @@ export const ColorSwatch: React.FC<{
 export const ColorPickerGrid: React.FC<ColorPickerGridProps> = ({
                                                                     draft,
                                                                     onChange,
+                                                                    disabled = false,
                                                                 }) => {
-    const mode =
-        (draft.themeOptions as any)?.palette?.mode === "dark" ? "dark" : "light";
-
-    const handleModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newMode = event.target.value;
-        const nextDraft = setColorOnDraft(draft, "palette.mode", newMode);
-        onChange(nextDraft);
-    };
-
     return (
-        <Box>
+        <Box sx={{ opacity: disabled ? 0.5 : 1 }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Basic Colors
             </Typography>
 
-            <Stack
-                direction="row"
-                spacing={4}
-                alignItems="center"
-                flexWrap="wrap"
-                useFlexGap
-            >
+            <Stack direction="row" spacing={4} flexWrap="wrap" useFlexGap>
                 {COLOR_FIELDS.map((field) => (
                     <Box key={field.path}>
                         <Typography variant="caption" sx={{ mb: 0.5, display: "block" }}>
@@ -124,7 +110,11 @@ export const ColorPickerGrid: React.FC<ColorPickerGridProps> = ({
                         </Typography>
                         <ColorSwatch
                             value={getColorFromDraft(draft, field.path, field.fallback)}
-                            onChange={(v) => onChange(setColorOnDraft(draft, field.path, v))}
+                            disabled={disabled}
+                            onChange={(v) =>
+                                !disabled &&
+                                onChange(setColorOnDraft(draft, field.path, v))
+                            }
                         />
                     </Box>
                 ))}

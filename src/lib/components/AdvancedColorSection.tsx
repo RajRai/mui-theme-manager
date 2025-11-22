@@ -19,14 +19,10 @@ import {
 export interface AdvancedColorSectionProps {
     draft: ThemeDefinition;
     onChange: (draft: ThemeDefinition) => void;
+    disabled?: boolean;
 }
 
-const ADVANCED_COLOR_FIELDS: {
-    group: string;
-    label: string;
-    path: string;
-    fallback: string;
-}[] = [
+const ADVANCED_COLOR_FIELDS = [
     { group: "Contrast", label: "Primary contrast", path: "palette.primary.contrastText", fallback: "#ffffff" },
     { group: "Contrast", label: "Secondary contrast", path: "palette.secondary.contrastText", fallback: "#ffffff" },
 
@@ -34,7 +30,7 @@ const ADVANCED_COLOR_FIELDS: {
     { group: "Background", label: "Background paper", path: "palette.background.paper", fallback: "#1e1e1e" },
 
     { group: "Text", label: "Text primary", path: "palette.text.primary", fallback: "#ffffff" },
-    { group: "Text", label: "Text secondary", path: "palette.text.secondary", fallback: "#bdbdbd" },
+    { group: "Text secondary", path: "palette.text.secondary", fallback: "#bdbdbd" },
 
     { group: "Status", label: "Error", path: "palette.error.main", fallback: "#d32f2f" },
     { group: "Status", label: "Warning", path: "palette.warning.main", fallback: "#ed6c02" },
@@ -45,6 +41,7 @@ const ADVANCED_COLOR_FIELDS: {
 export const AdvancedColorSection: React.FC<AdvancedColorSectionProps> = ({
                                                                               draft,
                                                                               onChange,
+                                                                              disabled = false,
                                                                           }) => {
     const groups = ADVANCED_COLOR_FIELDS.reduce((acc, f) => {
         acc[f.group] ||= [];
@@ -53,8 +50,14 @@ export const AdvancedColorSection: React.FC<AdvancedColorSectionProps> = ({
     }, {} as Record<string, typeof ADVANCED_COLOR_FIELDS>);
 
     return (
-        <Accordion sx={{ mt: 2 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Accordion
+            sx={{ mt: 2, opacity: disabled ? 0.5 : 1 }}
+            disabled={disabled}
+        >
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{ pointerEvents: disabled ? "none" : "auto" }}
+            >
                 <Typography variant="subtitle2">Advanced Colors</Typography>
             </AccordionSummary>
 
@@ -70,30 +73,30 @@ export const AdvancedColorSection: React.FC<AdvancedColorSectionProps> = ({
 
                         <Grid container spacing={2}>
                             {fields.map((f) => (
-                                <Grid
-                                    key={f.path}
-                                    item
-                                    xs={6}
-                                    sm={4}
-                                    md={3}
-                                    lg={2.4} // 5 per row roughly
-                                >
-                                    <Stack spacing={0.5} alignItems="flex-start">
+                                <Grid key={f.path} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+                                    <Stack spacing={0.5}>
                                         <Typography
                                             variant="caption"
                                             sx={{
                                                 whiteSpace: "nowrap",
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
-                                                maxWidth: "100%",
                                             }}
                                         >
                                             {f.label}
                                         </Typography>
 
                                         <ColorSwatch
-                                            value={getColorFromDraft(draft, f.path, f.fallback)}
-                                            onChange={(v) => onChange(setColorOnDraft(draft, f.path, v))}
+                                            disabled={disabled}
+                                            value={getColorFromDraft(
+                                                draft,
+                                                f.path,
+                                                f.fallback
+                                            )}
+                                            onChange={(v) =>
+                                                !disabled &&
+                                                onChange(setColorOnDraft(draft, f.path, v))
+                                            }
                                         />
                                     </Stack>
                                 </Grid>

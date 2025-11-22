@@ -1,5 +1,5 @@
-// ThemeEditorContents.tsx
-import React, { useState, useRef, useEffect } from "react";
+// ThemeEditor.tsx
+import React, {useEffect, useRef, useState} from "react";
 import {
     Box,
     TextField,
@@ -12,99 +12,116 @@ import {
     RadioGroup,
     Radio,
 } from "@mui/material";
-import { ThemeDefinition } from "../types";
-import { ColorPickerGrid, setColorOnDraft } from "./ColorPickerGrid";
-import { AdvancedColorSection } from "./AdvancedColorSection";
-import { AdvancedJsonEditor } from "./AdvancedJsonEditor";
-import { createTheme } from "@mui/material/styles";
+import {createTheme} from "@mui/material/styles";
+import {ThemeDefinition} from "../types";
+import {ColorPickerGrid, setColorOnDraft} from "./ColorPickerGrid";
+import {AdvancedColorSection} from "./AdvancedColorSection";
+import {AdvancedJsonEditor} from "./AdvancedJsonEditor";
+import {useThemeManager} from "../ThemeManagerContext";
 
-export const ThemeEditorContents: React.FC<{
-    draft: ThemeDefinition;
-    jsonError?: string;
-    onDraftChange: (draft: ThemeDefinition) => void;
-    onJsonChange: (json: string) => void;
-    onSave?: () => void;
+/** cheap deep clone without refs */
+function deepClone<T>(o: T): T {
+    return JSON.parse(JSON.stringify(o));
+}
+
+export type ThemeEditorProps = {
+    /** Controlled draft value */
+    value: ThemeDefinition;
+    /** Controlled change callback */
+    onChange?: (next: ThemeDefinition) => void;
+
+    /** Optional: show internal Save/Cancel row */
+    showActions?: boolean;
+    onSave?: (draft: ThemeDefinition) => void;
     onCancel?: () => void;
-    onLiveUpdate?: (draft: ThemeDefinition) => void;
-}> = ({
-          draft,
-          jsonError,
-          onDraftChange,
-          onJsonChange,
-          onSave,
-          onCancel,
-          onLiveUpdate,
-      }) => {
-    const [liveEditing, setLiveEditing] = useState(false);
-    const [localDraft, setLocalDraft] = useState(draft);
-    const userEditing = useRef(false);
 
-    // Keep localDraft in sync when the outer draft changes (e.g. reverting)
-    useEffect(() => {
-        setLocalDraft(draft);
-    }, [draft]);
+    /** Optional JSON error string to show under JSON editor */
+    jsonError?: string;
 
-    // --- Single unified handler for any draft mutation ---
-    const handleDraftChange = (updated: ThemeDefinition, triggeredByUser = true) => {
-        setLocalDraft(updated);
-        onDraftChange(updated);
+    /** Called with raw JSON text whenever it changes */
+    onJsonChangeRaw?: (json: string) => void;
 
-        // If live editing is on, push to provider
-        if (liveEditing && onLiveUpdate && triggeredByUser) {
-            onLiveUpdate(updated);
+    /** Live preview callback (when toggle is ON and changes happen) */
+    onLivePreview?: (draft: ThemeDefinition) => void;
+
+    /** Initial toggle state for "Live Editing" */
+    defaultLiveEditing?: boolean;
+};
+
+export const ThemeEditor: React.FC<ThemeEditorProps> = ({
+                                                            value,
+                                                            onChange,
+                                                            showActions = true,
+                                                            onSave,
+                                                            onCancel,
+                                                            jsonError,
+                                                            onJsonChangeRaw,
+                                                            onLivePreview: onLivePreviewProp,
+                                                            defaultLiveEditing = false
+                                                        }) => {
+    const { setPreviewTheme, updateCustomTheme, createCustomTheme, customThemes } = useThemeManager();
+
+    const isReadOnly = value.isPreset === true;
+
+    const [liveEditing, setLiveEditing] = useState(defaultLiveEditing);
+    const [localDraft, setLocalDraft] = useState<ThemeDefinition>(deepClone(value));
+
+    const onLivePreview = (draft: ThemeDefinition) => {
+        onLivePreviewProp?.(draft)
+        if (draft) {
+            setPreviewTheme(draft);
         }
     };
 
-    // --- When live editing is turned ON, immediately apply current draft ---
     useEffect(() => {
-        if (liveEditing && onLiveUpdate) {
-            onLiveUpdate(localDraft);
+        if (liveEditing){
+            onLivePreview(localDraft);
+        } else {
+            setPreviewTheme(undefined);
         }
-    }, [liveEditing]); // run once when toggled
+    }, [liveEditing]);
+
+    useEffect(() => {
+        setLocalDraft(value);
+    }, [value.id]);
+
+    const handleDraftChange = (updated: ThemeDefinition, byUser = true) => {
+        if (isReadOnly) return;
+        setLocalDraft(updated);
+        onChange?.(updated);
+        if (byUser && liveEditing) {
+            onLivePreview(updated);
+        }
+    };
 
     const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handleDraftChange({ ...localDraft, name: event.target.value });
     };
 
     const mode =
-        (localDraft.themeOptions as any)?.palette?.mode === "dark" ? "dark" : "light";
+        (localDraft.themeOptions as any)?.palette?.mode === "dark"
+            ? "dark"
+            : "light";
 
     const handleModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (isReadOnly) return;
         const newMode = event.target.value;
+        delete localDraft.themeOptions.palette?.background;
         handleDraftChange(setColorOnDraft(localDraft, "palette.mode", newMode));
     };
 
     const lastValidThemeOptions = useRef(localDraft.themeOptions);
-    // --- Handle JSON editor changes safely ---
+
     const handleJsonChange = (json: string) => {
-        onJsonChange(json); // always pass raw text up for display
-
+        if (isReadOnly) return;
+        onJsonChangeRaw?.(json);
         try {
-            // Try to parse JSON first
             const parsed = JSON.parse(json);
-
-            // Try to create a theme — but safely catch any runtime issue
-            let valid = false;
-            try {
-                createTheme(parsed);
-                valid = true;
-            } catch {
-                valid = false;
-            }
-
-            if (valid) {
-                lastValidThemeOptions.current = parsed;
-                handleDraftChange({ ...localDraft, themeOptions: parsed }, true);
-            } else {
-                // just log and ignore invalid themes
-                console.warn("Theme JSON parsed but not valid for MUI");
-            }
-        } catch {
-            // JSON was syntactically invalid — ignore
-        }
+            createTheme(parsed); // validate
+            lastValidThemeOptions.current = parsed;
+            handleDraftChange({ ...localDraft, themeOptions: parsed }, true);
+        } catch { /* ignore */ }
     };
-
-
 
     return (
         <Box sx={{ mt: 1, p: 2 }}>
@@ -112,11 +129,12 @@ export const ThemeEditorContents: React.FC<{
                 <TextField
                     label="Name"
                     fullWidth
+                    disabled={isReadOnly}
                     value={localDraft.name}
                     onChange={handleNameChange}
                 />
 
-                {/* --- Mode selector --- */}
+                {/* Theme Mode */}
                 <Box>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
                         Theme Mode
@@ -127,20 +145,38 @@ export const ThemeEditorContents: React.FC<{
                         onChange={handleModeChange}
                         sx={{ ml: 1 }}
                     >
-                        <FormControlLabel value="light" control={<Radio />} label="Light" />
-                        <FormControlLabel value="dark" control={<Radio />} label="Dark" />
+                        <FormControlLabel
+                            value="light"
+                            control={<Radio disabled={isReadOnly} />}
+                            label="Light"
+                        />
+                        <FormControlLabel
+                            value="dark"
+                            control={<Radio disabled={isReadOnly} />}
+                            label="Dark"
+                        />
                     </RadioGroup>
                 </Box>
 
-                {/* --- Basic and Advanced color sections --- */}
-                <ColorPickerGrid draft={localDraft} onChange={handleDraftChange} />
-                <AdvancedColorSection draft={localDraft} onChange={handleDraftChange} />
+                {/* Colors / Advanced Colors */}
+                <ColorPickerGrid
+                    draft={localDraft}
+                    onChange={handleDraftChange}
+                    disabled={isReadOnly}
+                />
 
-                {/* --- Raw JSON Editor --- */}
+                <AdvancedColorSection
+                    draft={localDraft}
+                    onChange={handleDraftChange}
+                    disabled={isReadOnly}
+                />
+
+                {/* JSON Editor */}
                 <AdvancedJsonEditor
                     draft={localDraft}
                     jsonError={jsonError}
                     onJsonChange={handleJsonChange}
+                    disabled={isReadOnly}
                 />
             </Stack>
 
@@ -148,7 +184,7 @@ export const ThemeEditorContents: React.FC<{
 
             <Stack
                 direction="row"
-                justifyContent="space-between"
+                justifyContent={showActions ? "space-between" : "flex-start"}
                 alignItems="center"
                 sx={{ pt: 1 }}
             >
@@ -156,24 +192,38 @@ export const ThemeEditorContents: React.FC<{
                     control={
                         <Switch
                             checked={liveEditing}
+                            disabled={isReadOnly}
                             onChange={(e) => setLiveEditing(e.target.checked)}
                         />
                     }
                     label="Live Editing"
                 />
 
-                <Stack direction="row" spacing={2}>
-                    {onCancel && (
-                        <Button variant="outlined" onClick={onCancel}>
-                            Cancel
-                        </Button>
-                    )}
-                    {onSave && (
-                        <Button variant="contained" onClick={onSave}>
-                            Save Theme
-                        </Button>
-                    )}
-                </Stack>
+                {showActions && (
+                    <Stack direction="row" spacing={2}>
+                        {onCancel && (
+                            <Button variant="outlined" onClick={onCancel}>
+                                Cancel
+                            </Button>
+                        )}
+                        {(
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    onSave?.(localDraft)
+                                    if (customThemes.find(theme => theme.id === localDraft.id)){
+                                        updateCustomTheme(localDraft.id, localDraft);
+                                    } else {
+                                        createCustomTheme(localDraft)
+                                    }
+                                }}
+                                disabled={isReadOnly}
+                            >
+                                Save Theme
+                            </Button>
+                        )}
+                    </Stack>
+                )}
             </Stack>
         </Box>
     );
