@@ -7,13 +7,17 @@ import {
     FormControl,
     Typography,
     Tooltip,
-    InputLabel, SelectProps,
+    InputLabel, SelectProps, FormControlProps,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useThemeManager } from "../ThemeManagerContext";
 
-export const ThemeSelector: React.FC<{ id?: string, selectProps?: SelectProps }> = ({ id = '', selectProps }) => {
+export const ThemeSelector: React.FC<{
+    id?: string,
+    selectProps?: SelectProps,
+    formControlProps?: FormControlProps
+}> = ({ id = '', selectProps, formControlProps }) => {
     const {
         presets,
         customThemes,
@@ -30,7 +34,7 @@ export const ThemeSelector: React.FC<{ id?: string, selectProps?: SelectProps }>
 
     return (
         <Stack direction="row" spacing={2} alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 200 }}>
+            <FormControl size="small" sx={{ minWidth: 200 }} {...formControlProps}>
                 {/* Empty label so spacing stays consistent */}
                 <InputLabel shrink={false}> </InputLabel>
 
