@@ -1,5 +1,6 @@
 import {ThemeDefinition} from "./types";
 import {ThemeOptions} from "@mui/material/styles";
+import type {} from "@mui/x-data-grid/themeAugmentation";
 
 /* -------------------------------------------------------------------------- */
 /* 🧱 Default Presets                                                         */
@@ -310,15 +311,13 @@ export const naturalPresets: ThemeDefinition[] = [emerald, arctic, sakura];
 /* 🧊 Glass Presets                                                           */
 /* -------------------------------------------------------------------------- */
 
-// Primary — from default MUI blue
-const bluePrimary = "#1976D2";        // light.primary.main
-const bluePrimaryDark = "#115293";    // darker shade of light.primary.main
-const bluePrimaryLight = "#63A4FF";   // lighter shade of light.primary.main
+const bluePrimary = "#1F5FFF";
+const bluePrimaryDark = "#0D3CCB";
+const bluePrimaryLight = "#5A8CFF";
 
-// Secondary — from default pink
-const greenSecondary = "#F48FB1";        // dark.secondary.main
-const greenSecondaryDark = "#BF5F82";    // darker pink
-const greenSecondaryLight = "#F8BBD0";   // lighter pink
+const greenSecondary = "#52E000";
+const greenSecondaryDark = "#2EA800";
+const greenSecondaryLight = "#86FF3B";
 
 export const glassDark: ThemeDefinition = {
     id: "glass-dark",
@@ -341,7 +340,6 @@ export const glassDark: ThemeDefinition = {
                 contrastText: "#0A0A0A",
             },
             background: {
-                // deep base like your glass example
                 default: "#070A12",
                 paper: "rgba(255,255,255,0.06)",
             },
@@ -350,8 +348,6 @@ export const glassDark: ThemeDefinition = {
                 primary: "rgba(255,255,255,0.92)",
                 secondary: "rgba(255,255,255,0.72)",
             },
-            success: {main: greenSecondary},
-            info: {main: bluePrimaryLight},
         },
         typography: {
             fontFamily: [
@@ -519,28 +515,6 @@ export const glassDark: ThemeDefinition = {
                     },
                 },
             },
-            MuiTab: {
-                styleOverrides: {
-                    root: {
-                        color: "rgba(255,255,255,0.72)",
-                        fontWeight: 650,
-                        textTransform: "none",
-                        minHeight: 44,
-                        "&.Mui-selected": {
-                            color: "rgba(255,255,255,0.92)",
-                        },
-                    },
-                },
-            },
-            MuiTabs: {
-                styleOverrides: {
-                    indicator: {
-                        height: 3,
-                        borderRadius: 3,
-                        backgroundColor: "rgba(90,140,255,0.95)", // bluePrimaryLight
-                    },
-                },
-            },
             MuiAppBar: {
                 defaultProps: {elevation: 0, color: "transparent"},
                 styleOverrides: {
@@ -556,6 +530,53 @@ export const glassDark: ThemeDefinition = {
             MuiToolbar: {
                 styleOverrides: {
                     root: {color: "rgba(255,255,255,0.92)"},
+                },
+            },
+            MuiDataGrid: {
+                styleOverrides: {
+                    root: {
+                        "--DataGrid-containerBackground": "rgba(255,255,255,0.06)",
+                        "--DataGrid-pinnedBackground": "rgba(255,255,255,0.06)",
+                        "--DataGrid-rowBorderColor": "rgba(255,255,255,0.10)",
+                        "--DataGrid-borderColor": "rgba(255,255,255,0.10)",
+
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                            color: "rgba(255,255,255,0.92)",
+                            fontWeight: 700,
+                        },
+                        "& .MuiDataGrid-iconButtonContainer, & .MuiDataGrid-menuIcon": {
+                            color: "rgba(255,255,255,0.82)",
+                        },
+
+                        "& .MuiDataGrid-columnHeaders": {
+                            backgroundColor: "rgba(255,255,255,0.06) !important",
+                            borderBottom: "1px solid rgba(255,255,255,0.10)",
+                        },
+                    },
+                },
+            },
+            MuiTabs: {
+                styleOverrides: {
+                    root: {
+                        backgroundColor: "rgba(10, 14, 24, 0.6)", // darker, steadier
+                        backdropFilter: "blur(14px)",
+                        WebkitBackdropFilter: "blur(14px)",
+                    },
+                    indicator: {
+                        height: 3,
+                        borderRadius: 3,
+                        backgroundColor: "rgba(90,140,255,0.6)",
+                    },
+                },
+            },
+            MuiTab: {
+                styleOverrides: {
+                    root: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontWeight: 700,
+                        textTransform: "none",
+                        minHeight: 36,
+                    },
                 },
             },
         },
@@ -591,8 +612,6 @@ export const glassLight: ThemeDefinition = {
                 primary: "rgba(15,23,42,0.92)",
                 secondary: "rgba(15,23,42,0.70)",
             },
-            success: {main: greenSecondaryDark},
-            info: {main: bluePrimary},
         },
         typography: {
             fontFamily: [
@@ -699,11 +718,60 @@ export const glassLight: ThemeDefinition = {
             MuiDivider: {
                 styleOverrides: {root: {borderColor: "rgba(15,23,42,0.12)"}},
             },
+            MuiDataGrid: {
+                styleOverrides: {
+                    root: {
+                        // Header row background + borders via grid CSS vars
+                        "--DataGrid-containerBackground": "rgba(255,255,255,0.72)",
+                        "--DataGrid-pinnedBackground": "rgba(255,255,255,0.72)",
+                        "--DataGrid-rowBorderColor": "rgba(15,23,42,0.10)",
+                        "--DataGrid-borderColor": "rgba(15,23,42,0.10)",
+
+                        // Text/icons in header
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                            color: "rgba(15,23,42,0.92)",
+                            fontWeight: 700,
+                        },
+                        "& .MuiDataGrid-iconButtonContainer, & .MuiDataGrid-menuIcon": {
+                            color: "rgba(15,23,42,0.70)",
+                        },
+
+                        // Force header surface even if something else overrides it
+                        "& .MuiDataGrid-columnHeaders": {
+                            backgroundColor: "rgba(255,255,255,0.72) !important",
+                            borderBottom: "1px solid rgba(15,23,42,0.10)",
+                        },
+                    },
+                },
+            },
+            MuiTabs: {
+                styleOverrides: {
+                    root: {
+                        backgroundColor: "rgba(255,255,255,0.4)", // more opaque
+                        backdropFilter: "blur(12px)",
+                        WebkitBackdropFilter: "blur(12px)",
+                    },
+                    indicator: {
+                        borderRadius: 0,
+                        backgroundColor: "rgba(31,95,255,0.4)",
+                    },
+                },
+            },
+            MuiTab: {
+                styleOverrides: {
+                    root: {
+                        color: "rgba(15,23,42,0.4)",
+                        fontWeight: 700,
+                        textTransform: "none",
+                        minHeight: 36,
+                    },
+                },
+            },
         },
     },
 }
 
-export const glassPresets: ThemeDefinition[] = [glassDark, glassLight];
+export const glassPresets = [glassDark, glassLight];
 
 /* -------------------------------------------------------------------------- */
 /* 🧪 Experimental Presets                                                    */

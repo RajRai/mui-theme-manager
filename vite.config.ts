@@ -31,9 +31,7 @@ export default defineConfig({
         rollupOptions: {
           // 🔒 Externalize all peer deps *and* their subpaths
           external: (id: string) =>
-              /^(react|react-dom|@mui\/material|@mui\/icons-material|@emotion\/react|@emotion\/styled)(\/.*)?$/.test(
-                  id
-              ),
+              /^(react|react-dom|@mui\/material|@mui\/icons-material|@mui\/x-data-grid|@emotion\/react|@emotion\/styled)(\/.*)?$/.test(id),
           output: {
             globals: {
               react: "React",
